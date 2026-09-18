@@ -62,44 +62,71 @@ with col_map:
         })
 
     if data:
-        color_grid = np.array([[hex_to_rgb(model.biome_map.get_biome(x, y)["color"]) for x in range(grid_size)] for y in range(grid_size)],dtype=np.uint8)
-        print(color_grid[0][0])
-        print(color_grid[5][5])
-        fig = px.imshow(color_grid,origin='lower')
+        color_grid = np.array([[hex_to_rgb(model.biome_map.get_biome(x, y).get("Color", model.biome_map.get_biome(x, y).get("color"))) for x in range(grid_size)] for y in range(grid_size)], dtype=np.uint8)
+        fig = px.imshow(color_grid, origin='lower')
         df = pd.DataFrame(data)
 
+        # 1. Настраиваем график агентов (добавляем их в группу легенды "Агенты")
         fig_agents = px.scatter(
             df, x="X", y="Y",
             hover_name="Архетип", hover_data=["ID"],
             color="Архетип", color_discrete_map=ARCHETYPES_CONFIG
         )
 
-        fig_agents.update_traces(marker=dict(size=14, line=dict(width=1, color="#1e1e1e")))
+        fig_agents.update_traces(
+            marker=dict(size=14, line=dict(width=1, color="#1e1e1e")),
+            legendgroup="Агенты",               # Группировка в легенде
+            legendgrouptitle_text="Агенты"      # Заголовок группы
+        )
 
         for trace in fig_agents.data:
             fig.add_trace(trace)
 
+        for biome in model.biome_map.biomes:
+            biome_color = biome.get("color", "#000000")
+
+            fig.add_scatter(
+                x=[None], y=[None],
+                mode="markers",
+                name=biome["name"],
+                marker=dict(
+                    size=14,
+                    color=biome_color,
+                    symbol="square",
+                    line=dict(width=1, color="#1e1e1e")
+                ),
+                legendgroup="Биомы",
+                legendgrouptitle_text="Биомы"
+            )
+
+        # 3. Настройка макета
         fig.update_layout(
-            showlegend=False,
+            showlegend=True,
+            legend=dict(
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02,
+                bgcolor="rgba(0,0,0,0)"
+            ),
             template="plotly_dark",
-            # uirevision сохраняет масштаб и позицию камеры между перезагрузками Streamlit
             uirevision="constant",
             xaxis=dict(
                 range=[-0.5, grid_size - 0.5],
                 dtick=1,
                 showgrid=True,
                 showticklabels=False,
-                autorange=False,   # Запрещаем Plotly автоподстраивать оси
-                fixedrange=True    # Запрещаем зум/скролл мышкой, если хотите жесткую карту
+                autorange=False,
+                fixedrange=True
             ),
             yaxis=dict(
                 range=[-0.5, grid_size - 0.5],
                 dtick=1,
                 showgrid=True,
                 showticklabels=False,
-                autorange=False,   # Запрещаем автоподстройку
+                autorange=False,
                 fixedrange=True,
-                scaleanchor="x",   # Делает ячейки строго квадратными (1:1)
+                scaleanchor="x",
                 scaleratio=1
             ),
             height=600,

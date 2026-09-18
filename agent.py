@@ -8,11 +8,12 @@ class PersonAgent(Agent):
         super().__init__(model)
         self.archetype = archetype
         self.color = color
+        self.agent_type = "Person"
 
-    # Метод получения информации о клетке для агента
+    # Метод получения информации о соседях на клетке(возвращает предложение о соседях)
     def get_neighbors_message(self):
         message = "Неподалёку от вас находятся: "
-        neighbors = self.model.grid.get_neighbors(self.pos, moore =True, radius = 0, include_center=True)
+        neighbors = [a for a in self.model.grid.get_neighbors(self.pos, moore =True, radius = 0, include_center=True) if a.agent_type == "Person"]
         if len(neighbors) == 1:
             message = "Вы одни в окрестности."
             return message
