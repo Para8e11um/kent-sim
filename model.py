@@ -7,15 +7,17 @@ except ImportError:
     from mesa.discrete_space import MultiGrid
 
 from agent import PersonAgent
+from biomegen import BiomeMap, BIOMES_ARRAY
 
 class SociologyModel(Model):
     """Главный класс мира симуляции"""
 
-    def __init__(self, width, height, archetype_counts):
+    def __init__(self, size, archetype_counts):
         super().__init__()
         # MultiGrid позволяет находиться нескольким агентам в одной клетке
         # torus=True "зацикливает" карту (ушел направо - вышел слева)
-        self.grid = MultiGrid(width, height, torus=True)
+        self.grid = MultiGrid(size, size, torus=True)
+        self.biome_map = BiomeMap(size, BIOMES_ARRAY,random.randint(1,1000000))
 
         # Создаем агентов на основе переданных настроек UI
         for archetype, data in archetype_counts.items():
